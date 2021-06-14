@@ -14,13 +14,8 @@ execution_sleep=600    #adjust the delay between updates (in seconds)
 file_log_path="./"    #the path to the log file
 #End configs
 
-if pages==[]:
-    print("Err: You forgot to add product links in the pages variable")
-    exit()
-
-if not(file_log) and not(terminal_monitor):
-    print ("Err: Why you want to run this program without file logging or terminal monitoring?")
-    exit()
+assert pages, "You forgot to add product links in the pages variable"
+assert file_log or terminal_monitor, "Why you want to run this program without file logging or terminal monitoring?"
 
 if terminal_monitor:
     system("clear")
@@ -46,13 +41,11 @@ while True:
     for page in pages:
         r = requests.get(page)
         soup = BeautifulSoup(r.content, "html.parser")
-        names.append(soup.find(class_="page-title").prettify().replace('<h1 class="page-title">\n ',"").replace("</h1>\n","").replace("\n"," "))
+        names.append(soup.find(class_="page-title").text.strip())
         prices.append(soup.find(class_="product-new-price").prettify().replace('<p class="product-new-price">\n ',"").replace("</p>","").replace("\n <sup>\n  ",".").replace("\n </sup>\n <span>\n ","").replace("\n </span>\n\n",""))
         oldprices.append(soup.find(class_="product-old-price").prettify().replace('<p class="product-old-price">\n <s>\n  ',"").replace("</p>","").replace("\n  <sup>\n   ",".").replace("\n  </sup>\n  <span>\n  ","").replace("\n  </span>\n </s>","").replace('\n <span class="product-this-deal">\n  ('," ").replace("                                                                            ","").replace("\n","").replace("                                    )","").replace(" </span>",""))
         sleep(request_sleep)
-    for price in prices:
-        if len(price)>maxPriceLenght:
-            maxPriceLenght=len(price)
+    maxPriceLength = max(len(p) for p in prices)
     today = datetime.today()
     if file_log:
         file=open(file_log_path+filename,"a")
